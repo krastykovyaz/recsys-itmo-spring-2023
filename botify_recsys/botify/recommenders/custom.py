@@ -2,17 +2,23 @@ from .random import Random
 from .recommender import Recommender
 from .indexed import Indexed
 import random
-import torch
-import faiss
+# import torch
+# import faiss
 from collections import defaultdict
-from transformers import AutoTokenizer, AutoModel
-import numpy as np
+# from transformers import AutoTokenizer, AutoModel
+# import numpy as np
+import logging
 
-model_ckpt = "sentence-transformers/multi-qa-mpnet-base-dot-v1"
-tokenizer = AutoTokenizer.from_pretrained(model_ckpt)
-model = AutoModel.from_pretrained(model_ckpt)
-device = torch.device("cpu")
-model.to(device)
+logging.basicConfig(level=logging.DEBUG)
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+
+
+# model_ckpt = "sentence-transformers/multi-qa-mpnet-base-dot-v1"
+# tokenizer = AutoTokenizer.from_pretrained(model_ckpt)
+# model = AutoModel.from_pretrained(model_ckpt)
+# device = torch.device("cpu")
+# model.to(device)
 
 
 class Custom(Recommender):
@@ -68,14 +74,7 @@ class Custom(Recommender):
         if recommendations is None:
             return self.fallback.recommend_next(user, prev_track, prev_track_time)
 
-        print('previous_track', previous_track)
-        # recommendations= previous_track
+        shuffled = list(recommendations)
+        random.shuffle(shuffled)
+        return shuffled[0]
 
-        emb_recommendations = np.array(self.get_embeddings(list(recommendations)).detach().cpu().numpy())
-        dim = emb_recommendations.shape[1]
-        index = faiss.IndexFlatL2(dim)
-        index.add(emb_recommendations)
-        question_embedding = self.get_embeddings([previous_track]).cpu().detach().numpy()
-        samples = index.search(question_embedding, 1)
-
-        return samples
